@@ -2,7 +2,7 @@
 
 ## Current State
 
-The repo runs a manual Airflow-triggered `prepare_run -> run_agent -> run_eval -> summarize_and_log` workflow. A successful smoke run has been completed and uploaded to S3-compatible object storage.
+The repo runs a manual Airflow-triggered `prepare_run -> run_agent_task -> run_eval_task -> summarize_and_log_task` workflow. `prepare_run` and `summarize_and_log_task` run in Airflow Python tasks; the heavy agent and SWE-bench evaluation steps run in isolated DockerOperator containers. Successful standalone and production-style smoke runs have been completed and uploaded to S3-compatible object storage.
 
 ## Services
 
@@ -24,6 +24,62 @@ Open:
 
 - Airflow: http://localhost:8080
 - MLflow: http://localhost:5000
+
+## Production-Style Compose Stack
+
+Build the shared pipeline image and start MLflow plus Airflow:
+
+```bash
+docker compose build
+docker compose up -d mlflow airflow
+```
+
+The Compose Airflow service uses the same image as DockerOperator task containers. It mounts the repo at `HOST_PROJECT_ROOT`, mounts `/var/run/docker.sock`, and runs the heavy `run_agent` and `run_eval` steps in isolated DockerOperator containers.
+
+Open:
+
+- Airflow: http://localhost:8080
+- MLflow: http://localhost:5000
+
+Default standalone/compose Airflow credentials:
+
+```text
+admin / admin
+```
+
+Trigger the production-style smoke run from Airflow with:
+
+```json
+{
+  "run_id": "compose-dockeroperator-smoke",
+  "task_slice": "0:1",
+  "workers": 1,
+  "cost_limit": 0
+}
+```
+
+Verify remote artifacts:
+
+```bash
+aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-smoke/ --recursive
+```
+
+Completed production-style verification:
+
+- Run name: `compose-dockeroperator-smoke-final`
+- Airflow status: all tasks succeeded
+- Local run folder: `runs/compose-dockeroperator-smoke-final/`
+- Remote artifact URI: `s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-smoke-final/`
+- MLflow experiment: `coding-agent-evals`
+- MLflow status: `FINISHED`
+- Metrics: `total_instances=1`, `resolved_rate=1.0`, `patch_applied_rate=1.0`, `failed_eval_count=0`
+- Manifest commands use direct in-container entrypoints (`mini-extra ...` and `python -m swebench...`), not host `uv run` wrappers.
+
+Verify that production-style run:
+
+```bash
+aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-smoke-final/ --recursive
+```
 
 ## Configuration
 

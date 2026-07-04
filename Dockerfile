@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     curl \
     docker.io \
+    graphviz \
  && update-ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
@@ -15,11 +16,18 @@ COPY pyproject.toml .
 COPY uv.lock .
 
 RUN uv sync --locked
+RUN uv pip install \
+    "apache-airflow==3.2.2" \
+    "apache-airflow-providers-docker" \
+    "mlflow" \
+    "boto3" \
+    "graphviz"
 
 ENV PATH="/mlops-assignment/.venv/bin:$PATH"
 
 COPY scripts scripts/
 COPY pipeline pipeline/
+COPY dags dags/
 
 # Optional but useful if your script lacks executable bit or shebang issues:
 RUN chmod +x scripts/*.sh

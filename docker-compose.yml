@@ -19,3 +19,48 @@ services:
       - ./mlflow-compose-artifacts:/mlflow
     environment:
       MLFLOW_HOST: 0.0.0.0
+    networks:
+      - mlops-pipeline
+
+  airflow:
+    build: .
+    image: ${PIPELINE_IMAGE:-mlops-assignment-pipeline:latest}
+    container_name: mlops-assignment-airflow
+    command:
+      - bash
+      - -lc
+      - |
+        mkdir -p "$${AIRFLOW_HOME}"
+        echo '{"admin": "admin"}' > "$${AIRFLOW_HOME}/simple_auth_manager_passwords.json.generated"
+        exec airflow standalone
+    depends_on:
+      - mlflow
+    env_file:
+      - .env
+    environment:
+      AIRFLOW_HOME: ${AIRFLOW_HOME:-/opt/airflow}
+      AIRFLOW__CORE__DAGS_FOLDER: ${HOST_PROJECT_ROOT:-/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline}/dags
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__API__PORT: "8080"
+      AIRFLOW__WEBSERVER__WEB_SERVER_PORT: "8080"
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      PIPELINE_IMAGE: ${PIPELINE_IMAGE:-mlops-assignment-pipeline:latest}
+      PIPELINE_DOCKER_NETWORK: mlops-pipeline
+      PIPELINE_DOCKER_URL: unix://var/run/docker.sock
+    ports:
+      - "${AIRFLOW_PORT:-8080}:8080"
+    working_dir: ${HOST_PROJECT_ROOT:-/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline}
+    volumes:
+      - ${HOST_PROJECT_ROOT:-/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline}:${HOST_PROJECT_ROOT:-/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline}
+      - /var/run/docker.sock:/var/run/docker.sock
+      - airflow-home:/opt/airflow
+      - ${HOME}/.aws:/root/.aws:ro
+    networks:
+      - mlops-pipeline
+
+networks:
+  mlops-pipeline:
+    name: mlops-pipeline
+
+volumes:
+  airflow-home:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import re
@@ -28,6 +29,7 @@ class RunConfig:
     agent_config: str
     project_root: str
     created_at: str
+    use_uv: bool = True
 
 
 def safe_run_id(value: str) -> str:
@@ -68,6 +70,7 @@ def build_run_config(params: dict[str, Any], project_root: Path) -> RunConfig:
         agent_config=agent_config,
         project_root=str(project_root),
         created_at=datetime.now(timezone.utc).isoformat(),
+        use_uv=bool(params.get("use_uv", True)),
     )
 
 
@@ -86,26 +89,29 @@ def prepare_run_dir(config: RunConfig) -> str:
     return str(root)
 
 
-def build_agent_command(config: RunConfig, output_dir: Path | None = None) -> list[str]:
+def build_agent_command(config: RunConfig, output_dir: Path | None = None, *, use_uv: bool = True) -> list[str]:
     output = output_dir or run_dir(config) / "run-agent" / "trajectories"
-    command = [
-        "uv",
-        "run",
-        "mini-extra",
-        "swebench",
-        "--subset",
-        config.subset,
-        "--split",
-        config.split,
-        "--model",
-        config.model,
-        "--slice",
-        config.task_slice,
-        "--workers",
-        str(config.workers),
-        "-o",
-        str(output),
-    ]
+    command = []
+    if use_uv:
+        command.extend(["uv", "run"])
+    command.extend(
+        [
+            "mini-extra",
+            "swebench",
+            "--subset",
+            config.subset,
+            "--split",
+            config.split,
+            "--model",
+            config.model,
+            "--slice",
+            config.task_slice,
+            "--workers",
+            str(config.workers),
+            "-o",
+            str(output),
+        ]
+    )
     if config.agent_config:
         command.extend(["--config", config.agent_config])
     if config.cost_limit >= 0:
@@ -115,25 +121,29 @@ def build_agent_command(config: RunConfig, output_dir: Path | None = None) -> li
     return command
 
 
-def build_eval_command(config: RunConfig, predictions_path: Path) -> list[str]:
-    return [
-        "uv",
-        "run",
-        "python",
-        "-m",
-        "swebench.harness.run_evaluation",
-        "--dataset_name",
-        config.dataset_name,
-        "--predictions_path",
-        str(predictions_path),
-        "--max_workers",
-        str(config.workers),
-        "--run_id",
-        config.run_id,
-    ]
+def build_eval_command(config: RunConfig, predictions_path: Path, *, use_uv: bool = True) -> list[str]:
+    command = []
+    if use_uv:
+        command.extend(["uv", "run"])
+    command.extend(
+        [
+            "python",
+            "-m",
+            "swebench.harness.run_evaluation",
+            "--dataset_name",
+            config.dataset_name,
+            "--predictions_path",
+            str(predictions_path),
+            "--max_workers",
+            str(config.workers),
+            "--run_id",
+            config.run_id,
+        ]
+    )
+    return command
 
 
-def run_agent(config: RunConfig) -> str:
+def run_agent(config: RunConfig, *, use_uv: bool = True) -> str:
     root = run_dir(config)
     agent_dir = root / "run-agent"
     trajectories_dir = agent_dir / "trajectories"
@@ -142,7 +152,7 @@ def run_agent(config: RunConfig) -> str:
         "MSWEA_COST_TRACKING": "ignore_errors",
     }
     subprocess.run(
-        build_agent_command(config, trajectories_dir),
+        build_agent_command(config, trajectories_dir, use_uv=use_uv),
         cwd=config.project_root,
         env=env,
         check=True,
@@ -155,13 +165,13 @@ def run_agent(config: RunConfig) -> str:
     return str(agent_dir / "preds.json")
 
 
-def run_evaluation(config: RunConfig, predictions_path: str) -> str:
+def run_evaluation(config: RunConfig, predictions_path: str, *, use_uv: bool = True) -> str:
     root = run_dir(config)
     eval_dir = root / "run-eval"
     eval_dir.mkdir(parents=True, exist_ok=True)
     with (eval_dir / "run_evaluation.stdout.log").open("w", encoding="utf-8") as stdout:
         subprocess.run(
-            build_eval_command(config, Path(predictions_path)),
+            build_eval_command(config, Path(predictions_path), use_uv=use_uv),
             cwd=config.project_root,
             stdout=stdout,
             stderr=subprocess.STDOUT,
@@ -217,8 +227,8 @@ def write_manifest(config: RunConfig, metrics: dict[str, Any], artifact_uri: str
             "eval_dir": str(root / "run-eval"),
         },
         "commands": {
-            "run_agent": build_agent_command(config),
-            "run_eval": build_eval_command(config, root / "run-agent" / "preds.json"),
+            "run_agent": build_agent_command(config, use_uv=config.use_uv),
+            "run_eval": build_eval_command(config, root / "run-agent" / "preds.json", use_uv=config.use_uv),
         },
         "metrics_summary": metrics,
     }
@@ -312,6 +322,35 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_run_config(config_path: str | Path) -> RunConfig:
+    return RunConfig(**read_json(Path(config_path)))
+
+
+def cli_run_agent(args: argparse.Namespace) -> None:
+    print(run_agent(load_run_config(args.config_path), use_uv=False))
+
+
+def cli_run_eval(args: argparse.Namespace) -> None:
+    print(run_evaluation(load_run_config(args.config_path), args.predictions_path, use_uv=False))
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Evaluation pipeline task entrypoints")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    run_agent_parser = subparsers.add_parser("run-agent")
+    run_agent_parser.add_argument("--config-path", required=True)
+    run_agent_parser.set_defaults(func=cli_run_agent)
+
+    run_eval_parser = subparsers.add_parser("run-eval")
+    run_eval_parser.add_argument("--config-path", required=True)
+    run_eval_parser.add_argument("--predictions-path", required=True)
+    run_eval_parser.set_defaults(func=cli_run_eval)
+
+    args = parser.parse_args(argv)
+    args.func(args)
+
+
 def _copy_swebench_logs(config: RunConfig, eval_dir: Path) -> None:
     logs_root = Path(config.project_root) / "logs" / "run_evaluation" / config.run_id
     if logs_root.exists():
@@ -344,3 +383,7 @@ def _collect_cost_metrics(agent_dir: Path) -> dict[str, float]:
         metrics["cost_observations"] = float(cost_count)
         metrics["cost_sum"] = total_cost
     return metrics
+
+
+if __name__ == "__main__":
+    main()
