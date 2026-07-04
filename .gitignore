@@ -2,11 +2,21 @@ __pycache__
 .ruff_cache
 .venv
 .env
+private.pem
+public.pem
 
 /trajectories/
 /trajectory.json
+/*.*.json
 
 /logs/
 
 mini-swe-agent/
 SWE-bench/
+
+/runs/
+/mlruns/
+/airflow/
+/mlflow-artifacts/
+/*.tar.gz
+/mlflow-compose-artifacts/
