@@ -81,6 +81,15 @@ Completed production-style verification:
 - MLflow traces: 3 lightweight traces derived from mini-swe-agent trajectories.
 - Manifest commands use direct in-container entrypoints (`mini-extra ...` and `python -m swebench...`), not host `uv run` wrappers.
 
+Submission bundle in this repository:
+
+- Pipeline code: `dags/evaluate_agent.py`, `pipeline/`, `scripts/`, `Dockerfile`, `docker-compose.yaml`.
+- Environment template: `.env.example`.
+- Final committed run sample: `runs/compose-dockeroperator-slice-3/`.
+- Object storage proof: `evidence/s3/compose-dockeroperator-slice-3-listing.txt`.
+- MLflow proof: `evidence/mlflow/compose-dockeroperator-slice-3-summary.json`.
+- Screenshots: `screenshots/airflow_dag.png`, `screenshots/mlflow_runs.png`, `screenshots/object_storage_artifacts.png`.
+
 Verify that production-style run:
 
 ```bash
@@ -90,6 +99,8 @@ aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-sli
 ## Configuration
 
 Copy `.env.example` to `.env` and fill secrets locally. `S3_BUCKET` controls artifact upload: leave it empty to disable uploads. The current run uses Cloudflare R2 through the S3-compatible endpoint. The DAG logs to MLflow only when `MLFLOW_TRACKING_URI` is present in the Airflow environment and the final task actually runs.
+
+Object Storage note: Nebius Object Storage access was attempted first, but the available service-account access was not sufficient to write to the intended Nebius bucket during the submission window. To keep the required long-term artifact storage behavior working and reproducible, the final run uses Cloudflare R2 as an S3-compatible Object Storage backend. The DAG and upload code use standard AWS/S3-compatible configuration, so the same pipeline can target Nebius Object Storage by changing the configured endpoint and credentials.
 
 
 ## Run Configuration
