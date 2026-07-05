@@ -1,0 +1,13 @@
+2026-07-05 08:40:00,021 - minisweagent - INFO - Loading dataset princeton-nlp/SWE-Bench_Verified, split test...
+2026-07-05 08:40:04,343 - minisweagent - INFO - Instance slice: 500 -> 3 instances
+2026-07-05 08:40:04,344 - minisweagent - INFO - Running on 3 instances...
+2026-07-05 08:40:04,344 - minisweagent - INFO - Building agent config from specs: ['swebench.yaml', 'agent.cost_limit=0.0']
+2026-07-05 08:40:07,625 - minisweagent.environment - DEBUG - Starting container with command: docker run -d --name minisweagent-77d6635e -w /testbed --rm docker.io/swebench/sweb.eval.x86_64.astropy_1776_astropy-12907:latest sleep 2h
+2026-07-05 08:40:07,880 - minisweagent.environment - INFO - Started container minisweagent-77d6635e with ID 22b26d3e991270f4f3c35f39732a814bee122097414444b767285ad469f0fffb
+2026-07-05 08:41:58,943 - minisweagent - INFO - Saved trajectory to '/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent/trajectories/astropy__astropy-12907/astropy__astropy-12907.traj.json'
+2026-07-05 08:41:58,945 - minisweagent.environment - DEBUG - Starting container with command: docker run -d --name minisweagent-15ccde0d -w /testbed --rm docker.io/swebench/sweb.eval.x86_64.astropy_1776_astropy-13033:latest sleep 2h
+2026-07-05 08:42:03,925 - minisweagent.environment - INFO - Started container minisweagent-15ccde0d with ID bff6c9af7cba28874b8d9cefb92bc291d9b3ead3c31ff719efdfe09eb33355aa
+2026-07-05 08:46:03,224 - minisweagent - INFO - Saved trajectory to '/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent/trajectories/astropy__astropy-13033/astropy__astropy-13033.traj.json'
+2026-07-05 08:46:03,226 - minisweagent.environment - DEBUG - Starting container with command: docker run -d --name minisweagent-c5dd0ce4 -w /testbed --rm docker.io/swebench/sweb.eval.x86_64.astropy_1776_astropy-13236:latest sleep 2h
+2026-07-05 08:46:08,138 - minisweagent.environment - INFO - Started container minisweagent-c5dd0ce4 with ID 323680ec209a120bac468b425dacd055434d11159d472684e36cee1b358efa56
+2026-07-05 08:47:19,073 - minisweagent - INFO - Saved trajectory to '/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent/trajectories/astropy__astropy-13236/astropy__astropy-13236.traj.json'

@@ -1,0 +1,18 @@
+{
+  "completion_tokens": 71868.0,
+  "cost_observations": 117.0,
+  "cost_sum": 1.75809005,
+  "estimated_input_cost": 1.4706180500000001,
+  "estimated_output_cost": 0.287472,
+  "estimated_total_cost": 1.75809005,
+  "failed_eval_count": 0,
+  "missing_patch_count": 0,
+  "patch_applied_count": 3,
+  "patch_applied_rate": 1.0,
+  "prompt_tokens": 1548019.0,
+  "provider_cost_sum": 0.0,
+  "resolved_count": 1,
+  "resolved_rate": 0.3333333333333333,
+  "total_instances": 3,
+  "total_tokens": 1619887.0
+}

@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import sys
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 from airflow.decorators import dag, task
@@ -55,6 +55,8 @@ def docker_task(task_id: str, command: str) -> DockerOperator:
         ],
         mount_tmp_dir=False,
         auto_remove="success",
+        retries=1,
+        execution_timeout=timedelta(hours=2),
     )
 
 
@@ -72,16 +74,19 @@ def docker_task(task_id: str, command: str) -> DockerOperator:
         "task_slice": Param("0:1", type="string"),
         "run_id": Param("", type="string"),
         "cost_limit": Param(0, type=["number", "integer"]),
+        "rerun_from_run_id": Param("", type="string"),
+        "input_cost_per_1m_tokens": Param(0, type=["number", "integer"]),
+        "output_cost_per_1m_tokens": Param(0, type=["number", "integer"]),
     },
 )
 def evaluate_agent_dag():
-    @task
+    @task(retries=1, execution_timeout=timedelta(minutes=5))
     def prepare_run(**context) -> dict:
         config = replace(build_run_config(context["params"], PROJECT_ROOT), use_uv=False)
         prepare_run_dir(config)
         return config.__dict__
 
-    @task
+    @task(retries=1, execution_timeout=timedelta(minutes=20))
     def summarize_and_log_task(config_dict: dict) -> dict:
         return summarize_run(RunConfig(**config_dict))
 

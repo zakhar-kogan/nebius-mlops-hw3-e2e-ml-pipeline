@@ -1,0 +1,17 @@
+{
+  "agent_config": "",
+  "cost_limit": 0.0,
+  "created_at": "2026-07-05T08:39:54.448138+00:00",
+  "dataset_name": "princeton-nlp/SWE-bench_Verified",
+  "input_cost_per_1m_tokens": 0.95,
+  "model": "nebius/moonshotai/Kimi-K2.6",
+  "output_cost_per_1m_tokens": 4.0,
+  "project_root": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline",
+  "rerun_from_run_id": "",
+  "run_id": "compose-dockeroperator-slice-3",
+  "split": "test",
+  "subset": "verified",
+  "task_slice": "0:3",
+  "use_uv": false,
+  "workers": 1
+}

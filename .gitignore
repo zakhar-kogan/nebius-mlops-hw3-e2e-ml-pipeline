@@ -14,7 +14,9 @@ public.pem
 mini-swe-agent/
 SWE-bench/
 
-/runs/
+/runs/*
+!/runs/compose-dockeroperator-slice-3/
+!/runs/compose-dockeroperator-slice-3/**
 /mlruns/
 /airflow/
 /mlflow-artifacts/

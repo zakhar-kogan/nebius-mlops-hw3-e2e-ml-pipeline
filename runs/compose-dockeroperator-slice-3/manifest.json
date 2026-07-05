@@ -1,0 +1,72 @@
+{
+  "artifact_uri": "s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-slice-3/",
+  "commands": {
+    "run_agent": [
+      "mini-extra",
+      "swebench",
+      "--subset",
+      "verified",
+      "--split",
+      "test",
+      "--model",
+      "nebius/moonshotai/Kimi-K2.6",
+      "--slice",
+      "0:3",
+      "--workers",
+      "1",
+      "-o",
+      "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent/trajectories",
+      "--config",
+      "swebench.yaml",
+      "--config",
+      "agent.cost_limit=0.0"
+    ],
+    "run_eval": [
+      "python",
+      "-m",
+      "swebench.harness.run_evaluation",
+      "--dataset_name",
+      "princeton-nlp/SWE-bench_Verified",
+      "--predictions_path",
+      "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent/preds.json",
+      "--max_workers",
+      "1",
+      "--run_id",
+      "compose-dockeroperator-slice-3"
+    ]
+  },
+  "config": "config.json",
+  "created_at": "2026-07-05T09:47:56.025715+00:00",
+  "metrics": "metrics.json",
+  "metrics_summary": {
+    "completion_tokens": 71868.0,
+    "cost_observations": 117.0,
+    "cost_sum": 1.75809005,
+    "estimated_input_cost": 1.4706180500000001,
+    "estimated_output_cost": 0.287472,
+    "estimated_total_cost": 1.75809005,
+    "failed_eval_count": 0,
+    "missing_patch_count": 0,
+    "patch_applied_count": 3,
+    "patch_applied_rate": 1.0,
+    "prompt_tokens": 1548019.0,
+    "provider_cost_sum": 0.0,
+    "resolved_count": 1,
+    "resolved_rate": 0.3333333333333333,
+    "total_instances": 3,
+    "total_tokens": 1619887.0
+  },
+  "mlflow_run_id": "666423b57f5f4dfda0daf59f5f0a50fb",
+  "paths": {
+    "agent_dir": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent",
+    "config": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/config.json",
+    "eval_dir": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-eval",
+    "eval_logs": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-eval/logs",
+    "eval_reports": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-eval/reports",
+    "metrics": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/metrics.json",
+    "predictions": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent/preds.json",
+    "run_dir": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3",
+    "trajectories": "/home/zakhar/nebius-mlops-hw3-e2e-ml-pipeline/runs/compose-dockeroperator-slice-3/run-agent/trajectories"
+  },
+  "run_id": "compose-dockeroperator-slice-3"
+}

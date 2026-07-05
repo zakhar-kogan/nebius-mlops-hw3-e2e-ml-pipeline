@@ -2,7 +2,7 @@
 
 ## Current State
 
-The repo runs a manual Airflow-triggered `prepare_run -> run_agent_task -> run_eval_task -> summarize_and_log_task` workflow. `prepare_run` and `summarize_and_log_task` run in Airflow Python tasks; the heavy agent and SWE-bench evaluation steps run in isolated DockerOperator containers. Successful standalone and production-style smoke runs have been completed and uploaded to S3-compatible object storage.
+The repo runs a manual Airflow-triggered `prepare_run -> run_agent_task -> run_eval_task -> summarize_and_log_task` workflow. `prepare_run` and `summarize_and_log_task` run in Airflow Python tasks; the heavy agent and SWE-bench evaluation steps run in isolated DockerOperator containers. A three-instance production-style run has been completed, logged to MLflow, and uploaded to S3-compatible object storage.
 
 ## Services
 
@@ -30,8 +30,8 @@ Open:
 Build the shared pipeline image and start MLflow plus Airflow:
 
 ```bash
-docker compose build
-docker compose up -d mlflow airflow
+docker compose -f docker-compose.yaml build
+docker compose -f docker-compose.yaml up -d mlflow airflow
 ```
 
 The Compose Airflow service uses the same image as DockerOperator task containers. It mounts the repo at `HOST_PROJECT_ROOT`, mounts `/var/run/docker.sock`, and runs the heavy `run_agent` and `run_eval` steps in isolated DockerOperator containers.
@@ -51,34 +51,40 @@ Trigger the production-style smoke run from Airflow with:
 
 ```json
 {
-  "run_id": "compose-dockeroperator-smoke",
-  "task_slice": "0:1",
+  "run_id": "compose-dockeroperator-slice-3",
+  "task_slice": "0:3",
   "workers": 1,
-  "cost_limit": 0
+  "cost_limit": 0,
+  "input_cost_per_1m_tokens": 0.95,
+  "output_cost_per_1m_tokens": 4.0
 }
 ```
 
 Verify remote artifacts:
 
 ```bash
-aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-smoke/ --recursive
+aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-slice-3/ --recursive
 ```
 
 Completed production-style verification:
 
-- Run name: `compose-dockeroperator-smoke-final`
+- Run name: `compose-dockeroperator-slice-3`
 - Airflow status: all tasks succeeded
-- Local run folder: `runs/compose-dockeroperator-smoke-final/`
-- Remote artifact URI: `s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-smoke-final/`
+- Local run folder: `runs/compose-dockeroperator-slice-3/`
+- Remote artifact URI: `s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-slice-3/`
 - MLflow experiment: `coding-agent-evals`
+- MLflow run id: `666423b57f5f4dfda0daf59f5f0a50fb`
 - MLflow status: `FINISHED`
-- Metrics: `total_instances=1`, `resolved_rate=1.0`, `patch_applied_rate=1.0`, `failed_eval_count=0`
+- Metrics: `total_instances=3`, `resolved_rate=0.3333333333333333`, `patch_applied_rate=1.0`, `failed_eval_count=0`
+- Token/cost metrics: `prompt_tokens=1548019`, `completion_tokens=71868`, `estimated_total_cost=1.75809005`
+- MLflow artifacts include config, manifest, metrics, predictions, trajectories, eval logs, and reports.
+- MLflow traces: 3 lightweight traces derived from mini-swe-agent trajectories.
 - Manifest commands use direct in-container entrypoints (`mini-extra ...` and `python -m swebench...`), not host `uv run` wrappers.
 
 Verify that production-style run:
 
 ```bash
-aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-smoke-final/ --recursive
+aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-slice-3/ --recursive
 ```
 
 ## Configuration
@@ -92,7 +98,8 @@ Required local inputs:
 
 - Put `NEBIUS_API_KEY` in `.env`.
 - Configure S3-compatible credentials with `aws configure`; this run used Cloudflare R2.
-- The model, cost limit, workers, split, subset, and task slice are Airflow DAG params, so they do not need to be hard-coded in `.env`.
+- The model, cost limit, workers, split, subset, task slice, rerun source, and optional input/output token prices are Airflow DAG params, so they do not need to be hard-coded in `.env`.
+- `cost_limit` is passed to mini-swe-agent/LiteLLM as a best-effort runtime guard. Since provider pricing may be unavailable for some Nebius models, the DAG also accepts `input_cost_per_1m_tokens` and `output_cost_per_1m_tokens` for reporting fallback estimates.
 - The upstream `mini-swe-agent/` and `SWE-bench/` clones are useful reference/debugging material, but the first run does not require them now that the DAG uses the installed mini-swe-agent default config.
 
 ## DAG
@@ -104,8 +111,26 @@ Required local inputs:
 - `workers=1`
 - `task_slice=0:1`
 - `cost_limit=0`
+- `rerun_from_run_id=""`
+- `input_cost_per_1m_tokens=0`
+- `output_cost_per_1m_tokens=0`
 
 Each real run writes `runs/<run-id>/` with config, predictions, trajectories, evaluation outputs, metrics, and a manifest.
+
+The committed sample follows this layout:
+
+```text
+runs/compose-dockeroperator-slice-3/
+  config.json
+  run-agent/
+    preds.json
+    trajectories/
+  run-eval/
+    logs/
+    reports/
+  metrics.json
+  manifest.json
+```
 
 ## Completed Smoke Run
 
