@@ -2,7 +2,7 @@
 
 ## Current State
 
-The repo runs a manual Airflow-triggered `prepare_run -> run_agent_task -> run_eval_task -> summarize_and_log_task` workflow. `prepare_run` and `summarize_and_log_task` run in Airflow Python tasks; the heavy agent and SWE-bench evaluation steps run in isolated DockerOperator containers. A three-instance production-style run has been completed, logged to MLflow, and uploaded to S3-compatible object storage.
+The repo runs a manual Airflow-triggered `prepare_run -> run_agent_task -> run_eval_task -> summarize_and_log_task` workflow. `prepare_run` and `summarize_and_log_task` run in Airflow Python tasks; the heavy agent and SWE-bench evaluation steps run in isolated DockerOperator containers. A three-instance Docker Compose run has been completed, logged to MLflow, and uploaded to S3-compatible object storage.
 
 ## Services
 
@@ -25,7 +25,7 @@ Open:
 - Airflow: http://localhost:8080
 - MLflow: http://localhost:5000
 
-## Production-Style Compose Stack
+## Docker Compose Stack
 
 Build the shared pipeline image and start MLflow plus Airflow:
 
@@ -47,7 +47,7 @@ Default standalone/compose Airflow credentials:
 admin / admin
 ```
 
-Trigger the production-style smoke run from Airflow with:
+Trigger the final smoke run from Airflow with:
 
 ```json
 {
@@ -66,7 +66,7 @@ Verify remote artifacts:
 aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-slice-3/ --recursive
 ```
 
-Completed production-style verification:
+Completed verification:
 
 - Run name: `compose-dockeroperator-slice-3`
 - Airflow status: all tasks succeeded
@@ -90,7 +90,7 @@ Submission bundle in this repository:
 - MLflow proof: `evidence/mlflow/compose-dockeroperator-slice-3-summary.json`.
 - Screenshots: `screenshots/airflow_dag.png`, `screenshots/mlflow_runs.png`, `screenshots/object_storage_artifacts.png`.
 
-Verify that production-style run:
+Verify the final run:
 
 ```bash
 aws s3 ls s3://nebius-mlops-hw3/mlops-assignment-runs/compose-dockeroperator-slice-3/ --recursive
