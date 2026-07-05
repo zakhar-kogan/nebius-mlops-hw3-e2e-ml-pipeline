@@ -143,6 +143,24 @@ runs/compose-dockeroperator-slice-3/
   manifest.json
 ```
 
+## Rerun By Run ID
+
+To reuse the configuration from an earlier run, trigger `evaluate_agent` with `rerun_from_run_id` set to the existing run folder name and a new `run_id`. The DAG loads `runs/<rerun_from_run_id>/config.json`, applies the new `run_id`, and refuses to overwrite an existing destination run folder.
+
+Example:
+
+```json
+{
+  "rerun_from_run_id": "compose-dockeroperator-slice-3",
+  "run_id": "compose-dockeroperator-slice-3-rerun",
+  "task_slice": "0:3",
+  "workers": 1,
+  "cost_limit": 0,
+  "input_cost_per_1m_tokens": 0.95,
+  "output_cost_per_1m_tokens": 4.0
+}
+```
+
 ## Completed Smoke Run
 
 Triggered Airflow DAG `evaluate_agent` with:
